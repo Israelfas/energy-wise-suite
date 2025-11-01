@@ -13,13 +13,10 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
-<<<<<<< HEAD
 import Profile from "./pages/Profile";
-=======
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Contact from "./pages/Contact";
->>>>>>> a426d18029022ba95a336ce0216407e808003b79
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,18 +28,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-<<<<<<< HEAD
-          <AccessibilityMenu />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<Admin />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-=======
           <SidebarProvider>
             <div className="min-h-screen flex w-full bg-background">
               <AppSidebar />
@@ -59,6 +44,7 @@ const App = () => (
                     <Route path="/" element={<Home />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/profile" element={<Profile />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
@@ -72,7 +58,7 @@ const App = () => (
               </SidebarInset>
             </div>
           </SidebarProvider>
->>>>>>> a426d18029022ba95a336ce0216407e808003b79
+          {/* Routes and layout rendered above */}
         </BrowserRouter>
       </AccessibilityProvider>
     </TooltipProvider>
