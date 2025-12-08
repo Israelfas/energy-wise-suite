@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,6 +11,17 @@ interface AccessibilityContextType {
   cargarPerfil: (apply?: boolean) => Promise<PerfilAccesibilidad | null>;
   dark: boolean;
   toggleDark: () => void;
+  // New accessibility features
+  fontSize: number;
+  setFontSize: (size: number) => void;
+  highContrast: boolean;
+  setHighContrast: (value: boolean) => void;
+  textToSpeech: boolean;
+  setTextToSpeech: (value: boolean) => void;
+  linkHighlight: boolean;
+  setLinkHighlight: (value: boolean) => void;
+  spacing: 'normal' | 'medium' | 'wide';
+  setSpacing: (value: 'normal' | 'medium' | 'wide') => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -18,10 +29,100 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [perfil, setPerfil] = useState<PerfilAccesibilidad>("ninguna");
   const [dark, setDark] = useState<boolean>(false);
+  const [fontSize, setFontSizeState] = useState<number>(16);
+  const [highContrast, setHighContrastState] = useState<boolean>(false);
+  const [textToSpeech, setTextToSpeechState] = useState<boolean>(false);
+  const [linkHighlight, setLinkHighlightState] = useState<boolean>(false);
+  const [spacing, setSpacingState] = useState<'normal' | 'medium' | 'wide'>('normal');
   const { user } = useAuth();
 
   const LOCAL_KEY = "accessibility_perfil";
   const LOCAL_THEME = "theme_pref";
+  const LOCAL_FONT_SIZE = "accessibility_font_size";
+  const LOCAL_HIGH_CONTRAST = "accessibility_high_contrast";
+  const LOCAL_TTS = "accessibility_tts";
+  const LOCAL_LINK_HIGHLIGHT = "accessibility_link_highlight";
+  const LOCAL_SPACING = "accessibility_spacing";
+
+  // Apply font size to DOM
+  const applyFontSizeDOM = useCallback((size: number) => {
+    document.documentElement.style.setProperty('--font-size-base', `${size}px`);
+  }, []);
+
+  // Apply high contrast to DOM
+  const applyHighContrastDOM = useCallback((value: boolean) => {
+    const root = document.documentElement;
+    if (value) {
+      root.classList.add('high-contrast');
+      root.style.setProperty('--contrast-boost', '1.5');
+    } else {
+      root.classList.remove('high-contrast');
+      root.style.removeProperty('--contrast-boost');
+    }
+  }, []);
+
+  // Apply link highlight to DOM
+  const applyLinkHighlightDOM = useCallback((value: boolean) => {
+    const root = document.documentElement;
+    if (value) {
+      root.classList.add('link-highlight');
+    } else {
+      root.classList.remove('link-highlight');
+    }
+  }, []);
+
+  // Apply spacing to DOM
+  const applySpacingDOM = useCallback((value: 'normal' | 'medium' | 'wide') => {
+    const root = document.documentElement;
+    root.classList.remove('spacing-normal', 'spacing-medium', 'spacing-wide');
+    root.classList.add(`spacing-${value}`);
+    
+    const spacingValues = {
+      normal: '0.5rem',
+      medium: '1rem',
+      wide: '1.5rem'
+    };
+    root.style.setProperty('--spacing-interactive', spacingValues[value]);
+  }, []);
+
+  // Set font size with persistence
+  const setFontSize = useCallback((size: number) => {
+    setFontSizeState(size);
+    applyFontSizeDOM(size);
+    try { localStorage.setItem(LOCAL_FONT_SIZE, String(size)); } catch {}
+  }, [applyFontSizeDOM]);
+
+  // Set high contrast with persistence
+  const setHighContrast = useCallback((value: boolean) => {
+    setHighContrastState(value);
+    applyHighContrastDOM(value);
+    try { localStorage.setItem(LOCAL_HIGH_CONTRAST, String(value)); } catch {}
+  }, [applyHighContrastDOM]);
+
+  // Set text to speech with persistence
+  const setTextToSpeech = useCallback((value: boolean) => {
+    setTextToSpeechState(value);
+    try { localStorage.setItem(LOCAL_TTS, String(value)); } catch {}
+    
+    // Cancel any ongoing speech when disabled
+    if (!value && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
+  // Set link highlight with persistence
+  const setLinkHighlight = useCallback((value: boolean) => {
+    setLinkHighlightState(value);
+    applyLinkHighlightDOM(value);
+    try { localStorage.setItem(LOCAL_LINK_HIGHLIGHT, String(value)); } catch {}
+  }, [applyLinkHighlightDOM]);
+
+  // Set spacing with persistence
+  const setSpacing = useCallback((value: 'normal' | 'medium' | 'wide') => {
+    setSpacingState(value);
+    applySpacingDOM(value);
+    try { localStorage.setItem(LOCAL_SPACING, value); } catch {}
+  }, [applySpacingDOM]);
 
   // On mount, load profile from localStorage if present (for unauthenticated users)
   useEffect(() => {
@@ -32,7 +133,8 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         setPerfil(parsed);
         aplicarPerfilDOM(parsed);
       }
-      // load theme preference (dark/light) -- fall back to system preference
+      
+      // Load theme preference (dark/light) -- fall back to system preference
       const themeStored = localStorage.getItem(LOCAL_THEME);
       if (themeStored) {
         const isDark = themeStored === 'dark';
@@ -42,6 +144,41 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         setDark(prefersDark);
         applyThemeDOM(prefersDark);
+      }
+
+      // Load font size
+      const fontSizeStored = localStorage.getItem(LOCAL_FONT_SIZE);
+      if (fontSizeStored) {
+        const size = parseInt(fontSizeStored, 10);
+        setFontSizeState(size);
+        applyFontSizeDOM(size);
+      }
+
+      // Load high contrast
+      const highContrastStored = localStorage.getItem(LOCAL_HIGH_CONTRAST);
+      if (highContrastStored === 'true') {
+        setHighContrastState(true);
+        applyHighContrastDOM(true);
+      }
+
+      // Load TTS
+      const ttsStored = localStorage.getItem(LOCAL_TTS);
+      if (ttsStored === 'true') {
+        setTextToSpeechState(true);
+      }
+
+      // Load link highlight
+      const linkHighlightStored = localStorage.getItem(LOCAL_LINK_HIGHLIGHT);
+      if (linkHighlightStored === 'true') {
+        setLinkHighlightState(true);
+        applyLinkHighlightDOM(true);
+      }
+
+      // Load spacing
+      const spacingStored = localStorage.getItem(LOCAL_SPACING) as 'normal' | 'medium' | 'wide' | null;
+      if (spacingStored) {
+        setSpacingState(spacingStored);
+        applySpacingDOM(spacingStored);
       }
     } catch (error) {
       console.warn("Could not read accessibility profile from localStorage:", error);
@@ -190,7 +327,24 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AccessibilityContext.Provider value={{ perfil, setPerfil, aplicarPerfil, cargarPerfil, dark, toggleDark }}>
+    <AccessibilityContext.Provider value={{ 
+      perfil, 
+      setPerfil, 
+      aplicarPerfil, 
+      cargarPerfil, 
+      dark, 
+      toggleDark,
+      fontSize,
+      setFontSize,
+      highContrast,
+      setHighContrast,
+      textToSpeech,
+      setTextToSpeech,
+      linkHighlight,
+      setLinkHighlight,
+      spacing,
+      setSpacing,
+    }}>
       {children}
     </AccessibilityContext.Provider>
   );
