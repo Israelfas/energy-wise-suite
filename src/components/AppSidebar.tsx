@@ -97,8 +97,8 @@ export function AppSidebar() {
       // Focus styles for keyboard navigation (WCAG 2.4.7)
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2",
       isActive 
-        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
-        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        ? "bg-primary text-primary-foreground shadow-sm" 
+        : "text-foreground hover:bg-accent hover:text-accent-foreground"
     );
 
   const renderMenuItem = (item: typeof mainItems[0], showTooltip = false) => {
