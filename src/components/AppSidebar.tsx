@@ -98,7 +98,7 @@ export function AppSidebar() {
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2",
       isActive 
         ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
-        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        : "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     );
 
   const renderMenuItem = (item: typeof mainItems[0], showTooltip = false) => {
@@ -110,9 +110,9 @@ export function AppSidebar() {
         aria-label={item.description}
         aria-current={location.pathname === item.url ? "page" : undefined}
       >
-        <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <item.icon className="h-5 w-5 shrink-0 text-sidebar-foreground" aria-hidden="true" />
         <span className={cn(
-          "truncate transition-opacity duration-200",
+          "truncate transition-opacity duration-200 text-sidebar-foreground",
           isCollapsed && "opacity-0 w-0"
         )}>
           {item.title}
@@ -229,7 +229,7 @@ export function AppSidebar() {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "w-full justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                  "w-full justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                   isCollapsed && "justify-center"

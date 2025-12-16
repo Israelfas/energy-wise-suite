@@ -254,7 +254,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-3">
                 <select
-                  className="rounded border p-2"
+                  className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm"
                   value={selectedDevice ?? ""}
                   onChange={(e) => { setSelectedDevice(e.target.value || null); setLoadingData(true); }}
                 >
@@ -265,7 +265,7 @@ export default function Dashboard() {
                 </select>
 
               <select
-                className="rounded border p-2"
+                className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm"
                 value={viewMode}
                 onChange={(e) => { setViewMode(e.target.value as any); setLoadingData(true); }}
               >
@@ -274,13 +274,13 @@ export default function Dashboard() {
               </select>
 
               {viewMode === "hourly" ? (
-                <select className="rounded border p-2" value={hoursWindow} onChange={(e) => setHoursWindow(Number(e.target.value))}>
+                <select className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm" value={hoursWindow} onChange={(e) => setHoursWindow(Number(e.target.value))}>
                   <option value={24}>24h</option>
                   <option value={48}>48h</option>
                   <option value={72}>72h</option>
                 </select>
               ) : (
-                <select className="rounded border p-2" value={daysWindow} onChange={(e) => setDaysWindow(Number(e.target.value))}>
+                <select className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm" value={daysWindow} onChange={(e) => setDaysWindow(Number(e.target.value))}>
                   <option value={7}>7d</option>
                   <option value={30}>30d</option>
                   <option value={90}>90d</option>
@@ -306,7 +306,7 @@ export default function Dashboard() {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="py-12 text-center text-muted-foreground">No hay datos de consumo aún para el dispositivo seleccionado.</div>
+              <div className="py-12 text-center text-foreground">No hay datos de consumo aún para el dispositivo seleccionado.</div>
             )}
           </CardContent>
         </Card>
