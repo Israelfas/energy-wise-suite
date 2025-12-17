@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Bell, ChevronRight, LogOut, User, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -61,9 +61,15 @@ export const Header = () => {
     setShowSyncBanner(!!(user && local && local !== perfil));
   }, [user, perfil]);
 
-  const handleSignOut = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
     trackClick("logout_button");
-    signOut();
+    try {
+      await signOut();
+    } finally {
+      navigate("/auth");
+    }
   };
 
   // Generate breadcrumb items
