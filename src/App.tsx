@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { AccessibilityFeatures } from "@/components/AccessibilityFeatures";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
@@ -28,6 +29,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          {/* IMPORTANTE: AccessibilityFeatures debe estar DENTRO de BrowserRouter */}
+          <AccessibilityFeatures />
           <SidebarProvider>
             <div className="min-h-screen flex w-full bg-background">
               <AppSidebar />
@@ -39,7 +42,7 @@ const App = () => (
                     <Header />
                   </div>
                 </header>
-                <main className="flex-1 px-4 py-6 md:px-6">
+                <main id="main-content" className="flex-1 px-4 py-6 md:px-6">
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/auth" element={<Auth />} />
@@ -58,7 +61,6 @@ const App = () => (
               </SidebarInset>
             </div>
           </SidebarProvider>
-          {/* Routes and layout rendered above */}
         </BrowserRouter>
       </AccessibilityProvider>
     </TooltipProvider>
