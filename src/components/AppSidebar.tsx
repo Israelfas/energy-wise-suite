@@ -77,8 +77,8 @@ export function AppSidebar() {
       "min-h-[44px] transition-all duration-200 ease-out",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
       isActive 
-        ? "bg-primary text-primary-foreground shadow-sm" 
-        : "text-foreground hover:bg-accent hover:text-accent-foreground"
+        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
+        : "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     );
 
   return (
