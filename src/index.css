@@ -335,3 +335,34 @@ All colors MUST be HSL.
     @apply inline-flex items-center justify-center px-2 py-1 text-xs font-semibold bg-muted border border-border rounded shadow-sm;
   }
 }
+
+/* Auth page helper: hide global chrome (sidebar, header, footer, floating controls) */
+@layer components {
+  body.auth-page {
+    --hide-important: display: none !important;
+  }
+
+  /* Prevent the browser page scrollbar when showing auth view; allow inner card scrolling */
+  html.auth-page,
+  body.auth-page {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  body.auth-page aside,
+  body.auth-page header,
+  body.auth-page footer,
+  body.auth-page .skip-link,
+  body.auth-page [aria-label="Abrir menú de accesibilidad"],
+  body.auth-page .voice-control-active,
+  body.auth-page .slider,
+  body.auth-page .range-slider {
+    display: none !important;
+  }
+
+  /* If the layout has a compact topbar element (button or small badge), hide it too */
+  body.auth-page .topbar-button,
+  body.auth-page .small-badge {
+    display: none !important;
+  }
+}

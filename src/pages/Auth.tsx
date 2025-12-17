@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMetrics } from "@/hooks/useMetrics";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, ArrowLeft, Check, X } from "lucide-react";
+import { Leaf, ArrowLeft, Check, X, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -66,6 +66,49 @@ export default function Auth() {
   const [loginStart, setLoginStart] = useState<number | null>(null);
   const [registerStart, setRegisterStart] = useState<number | null>(null);
 
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'login'|'register'>('login');
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [cardScale, setCardScale] = useState(1);
+
+  // Ajusta el scale del card para que siempre quepa en viewport y evite barras
+  useEffect(() => {
+    let raf = 0;
+    const adjust = () => {
+      const el = cardRef.current;
+      if (!el) return;
+      // reset transform to measure natural height
+      el.style.transform = 'none';
+      const margin = 48; // espacio superior/inferior deseado
+      const available = window.innerHeight - margin;
+      const rect = el.getBoundingClientRect();
+      const height = rect.height;
+      if (height > available) {
+        const scale = Math.max(0.7, available / height);
+        el.style.transformOrigin = 'top center';
+        el.style.transform = `scale(${scale})`;
+        setCardScale(scale);
+      } else {
+        el.style.transform = 'none';
+        setCardScale(1);
+      }
+    };
+
+    const schedule = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(adjust);
+    };
+
+    schedule();
+    window.addEventListener('resize', schedule);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [activeTab, registerData.nombre, registerData.email, registerData.password, registerData.confirmPassword, registerData.acceptedTerms, showRegisterPassword, showRegisterConfirm]);
+
   // Lockout policy: after this many failed attempts, block for LOCK_DURATION_MS
   const LOCK_THRESHOLD = 3;
   const LOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -78,6 +121,12 @@ export default function Auth() {
     const id = setInterval(() => setLockTick((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [lockedUntil]);
+
+  // Marcar body para ocultar la chrome global en la página de auth
+  useEffect(() => {
+    document.body.classList.add('auth-page');
+    return () => document.body.classList.remove('auth-page');
+  }, []);
 
   // Redirect if already logged in
   if (user) {
@@ -246,37 +295,56 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-4">
         <div className="text-center space-y-2">
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 font-bold text-2xl hover:opacity-80 transition-opacity"
-          >
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-              <Leaf className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              EcoSense
-            </span>
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              aria-label="Volver"
+              onClick={() => { /* no-op when rendered as Link child */ }}
+              className="-ml-2"
+            >
+              <Link to="/" className="flex items-center">
+                <ArrowLeft className="h-5 w-5 text-primary-foreground" />
+              </Link>
+            </Button>
+
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 font-bold text-2xl hover:opacity-80 transition-opacity"
+            >
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                <Leaf className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                EcoSense
+              </span>
+            </Link>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Bienvenido</CardTitle>
+            <Card
+              ref={cardRef}
+              className={activeTab === 'register' ? 'w-full' : 'max-h-[80vh] w-full overflow-hidden'}
+              style={{ transition: 'transform 160ms ease' }}
+            >
+            <CardHeader>
+            <CardTitle className={activeTab === 'register' ? 'text-lg' : undefined}>Bienvenido</CardTitle>
             <CardDescription>
               Inicia sesión o crea una cuenta para comenzar
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
+          <CardContent className={activeTab === 'register' ? 'p-3' : 'p-4 overflow-auto max-h-[64vh]'}>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
                     <Input
@@ -300,18 +368,31 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Contraseña</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={loginData.password}
-                      onChange={(e) =>
-                        setLoginData({ ...loginData, password: e.target.value })
-                      }
-                      onFocus={() => { if (!loginStart) { setLoginStart(Date.now()); trackMetric({ accion: 'login_started', metadata: { timestamp: new Date().toISOString() } }); } }}
-                      required
-                      aria-invalid={!!loginErrors.password}
-                      aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
-                    />
+                      <div className="relative">
+                        <Input
+                          id="login-password"
+                          type={showLoginPassword ? "text" : "password"}
+                          value={loginData.password}
+                          onChange={(e) =>
+                            setLoginData({ ...loginData, password: e.target.value })
+                          }
+                          onFocus={() => { if (!loginStart) { setLoginStart(Date.now()); trackMetric({ accion: 'login_started', metadata: { timestamp: new Date().toISOString() } }); } }}
+                          required
+                          aria-invalid={!!loginErrors.password}
+                          aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
+                          className="pr-10"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          type="button"
+                          onClick={() => setShowLoginPassword((s) => !s)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2"
+                          aria-label={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        >
+                          {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     {loginErrors.password ? (
                       <p id="login-password-error" className="text-xs text-destructive mt-1">{loginErrors.password}</p>
                     ) : (
@@ -342,7 +423,7 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
+                <form onSubmit={handleRegister} className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="register-nombre">Nombre Completo</Label>
                     <Input
@@ -357,6 +438,7 @@ export default function Auth() {
                       required
                       aria-invalid={!!registerErrors.nombre}
                       aria-describedby={registerErrors.nombre ? 'register-nombre-error' : undefined}
+                      className={activeTab === 'register' ? 'h-9 text-sm py-1' : undefined}
                     />
                     {registerErrors.nombre ? (
                       <p id="register-nombre-error" className="text-xs text-destructive mt-1">{registerErrors.nombre}</p>
@@ -389,6 +471,7 @@ export default function Auth() {
                       required
                       aria-invalid={!!registerErrors.email}
                       aria-describedby={registerErrors.email ? 'register-email-error' : undefined}
+                      className={activeTab === 'register' ? 'h-9 text-sm py-1' : undefined}
                     />
                     {registerErrors.email ? (
                       <p id="register-email-error" className="text-xs text-destructive mt-1">{registerErrors.email}</p>
@@ -398,23 +481,36 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Contraseña</Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      value={registerData.password}
-                      onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          password: e.target.value,
-                        })
-                      }
-                      onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
-                      required
-                      aria-invalid={!!registerErrors.password}
-                      aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="register-password"
+                        type={showRegisterPassword ? "text" : "password"}
+                        value={registerData.password}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            password: e.target.value,
+                          })
+                        }
+                        onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
+                        required
+                        aria-invalid={!!registerErrors.password}
+                        aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
+                        className={activeTab === 'register' ? 'pr-10 h-9 text-sm py-1' : 'pr-10'}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        onClick={() => setShowRegisterPassword((s) => !s)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                        aria-label={showRegisterPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
                     <div className="mt-2">
-                      <ul className="text-sm space-y-1">
+                      <ul className={activeTab === 'register' ? 'text-xs space-y-0.5' : 'text-sm space-y-1'}>
                         <li className={`flex items-center gap-2 ${registerData.password.length >= 8 ? 'text-green-600' : 'text-muted-foreground'}`}>
                           {registerData.password.length >= 8 ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Mínimo 8 caracteres
                         </li>
@@ -438,28 +534,41 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-confirm">Confirmar Contraseña</Label>
-                    <Input
-                      id="register-confirmPassword"
-                      type="password"
-                      value={registerData.confirmPassword}
-                      onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          confirmPassword: e.target.value,
-                        })
-                      }
-                      onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
-                      required
-                      aria-invalid={!!registerErrors.confirmPassword}
-                      aria-describedby={registerErrors.confirmPassword ? 'register-confirmPassword-error' : undefined}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="register-confirmPassword"
+                        type={showRegisterConfirm ? "text" : "password"}
+                        value={registerData.confirmPassword}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
+                        required
+                        aria-invalid={!!registerErrors.confirmPassword}
+                        aria-describedby={registerErrors.confirmPassword ? 'register-confirmPassword-error' : undefined}
+                        className={activeTab === 'register' ? 'pr-10 h-9 text-sm py-1' : 'pr-10'}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        onClick={() => setShowRegisterConfirm((s) => !s)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                        aria-label={showRegisterConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {showRegisterConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
                     {registerErrors.confirmPassword ? (
                       <p id="register-confirmPassword-error" className="text-xs text-destructive mt-1">{registerErrors.confirmPassword}</p>
                     ) : (
                       <p className="text-xs text-muted-foreground mt-1">Repite la contraseña para confirmarla.</p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className={`w-full ${activeTab === 'register' ? 'h-9' : ''}`} disabled={loading}>
                     {loading ? "Registrando..." : "Crear Cuenta"}
                   </Button>
                 </form>
@@ -476,7 +585,7 @@ export default function Auth() {
                 <summary className="text-sm text-muted-foreground cursor-pointer hover:text-primary">
                   ¿Olvidaste tu contraseña?
                 </summary>
-                <form onSubmit={handleReset} className="space-y-4 mt-4">
+                <form onSubmit={handleReset} className="space-y-3 mt-3">
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Email de recuperación</Label>
                     <Input
@@ -506,17 +615,7 @@ export default function Auth() {
           </CardContent>
         </Card>
 
-        <Button
-          variant="ghost"
-          asChild
-          className="w-full"
-          onClick={() => trackClick("back_home")}
-        >
-          <Link to="/" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
-          </Link>
-        </Button>
+        {/* Botón de volver eliminado según diseño de auth */}
       </div>
     </div>
   );
