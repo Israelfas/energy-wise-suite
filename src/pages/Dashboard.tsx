@@ -1,16 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMetrics } from "@/hooks/useMetrics";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Zap, TrendingDown, Calendar, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
@@ -197,189 +195,180 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Dashboard de Consumo</h1>
+        <p className="text-muted-foreground">
+          Gestiona y visualiza tu consumo energético
+        </p>
+      </div>
 
-      <main className="flex-1 container py-8 space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard de Consumo</h1>
-          <p className="text-muted-foreground">
-            Gestiona y visualiza tu consumo energético
-          </p>
-        </div>
-
-        {/* Device summary: show only the selected device and current watts */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Dispositivo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(dispositivos.find(d => d.id === selectedDevice)?.nombre) || "-"}</div>
-              <p className="text-xs text-muted-foreground">nombre</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Potencia nominal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(dispositivos.find(d => d.id === selectedDevice)?.potencia_w ?? 0)} W</div>
-              <p className="text-xs text-muted-foreground">potencia configurada</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Potencia actual</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{consumoData.length > 0 ? Math.round((Number(consumoData[consumoData.length-1].consumo_kwh ?? 0) * 1000)) : (dispositivos.find(d => d.id === selectedDevice)?.potencia_w ?? 0)} W</div>
-              <p className="text-xs text-muted-foreground">estimación instantánea (W)</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Chart */}
+      {/* Device summary cards */}
+      <div className="grid md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <CardTitle>Historial de Consumo</CardTitle>
-              <CardDescription>
-                {viewMode === "hourly"
-                  ? `Últimas ${hoursWindow} horas` 
-                  : `Últimos ${daysWindow} días`}
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-3">
-                <select
-                  className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm"
-                  value={selectedDevice ?? ""}
-                  onChange={(e) => { setSelectedDevice(e.target.value || null); setLoadingData(true); }}
-                >
-                  <option value="">Selecciona dispositivo</option>
-                  {dispositivos.map((d) => (
-                    <option key={d.id} value={d.id}>{d.nombre || d.id}</option>
-                  ))}
-                </select>
-
-              <select
-                className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm"
-                value={viewMode}
-                onChange={(e) => { setViewMode(e.target.value as any); setLoadingData(true); }}
-              >
-                <option value="hourly">Horario (por hora)</option>
-                <option value="daily">Diario</option>
-              </select>
-
-              {viewMode === "hourly" ? (
-                <select className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm" value={hoursWindow} onChange={(e) => setHoursWindow(Number(e.target.value))}>
-                  <option value={24}>24h</option>
-                  <option value={48}>48h</option>
-                  <option value={72}>72h</option>
-                </select>
-              ) : (
-                <select className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm" value={daysWindow} onChange={(e) => setDaysWindow(Number(e.target.value))}>
-                  <option value={7}>7d</option>
-                  <option value={30}>30d</option>
-                  <option value={90}>90d</option>
-                </select>
-              )}
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Dispositivo</CardTitle>
           </CardHeader>
           <CardContent>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="fecha" />
-                    <YAxis label={{ value: viewMode === "hourly" ? "Watts (W)" : "kWh", angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey={viewMode === "hourly" ? "watts" : "kwh"}
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))" }}
-                    />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="py-12 text-center text-foreground">No hay datos de consumo aún para el dispositivo seleccionado.</div>
-            )}
+            <div className="text-2xl font-bold">{(dispositivos.find(d => d.id === selectedDevice)?.nombre) || "-"}</div>
+            <p className="text-xs text-muted-foreground">nombre</p>
           </CardContent>
         </Card>
 
-        {/* Add Consumption Form */}
-        {/* Devices management */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Mis Dispositivos
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Potencia nominal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{(dispositivos.find(d => d.id === selectedDevice)?.potencia_w ?? 0)} W</div>
+            <p className="text-xs text-muted-foreground">potencia configurada</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Potencia actual</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{consumoData.length > 0 ? Math.round((Number(consumoData[consumoData.length-1].consumo_kwh ?? 0) * 1000)) : (dispositivos.find(d => d.id === selectedDevice)?.potencia_w ?? 0)} W</div>
+            <p className="text-xs text-muted-foreground">estimación instantánea (W)</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Chart */}
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle>Historial de Consumo</CardTitle>
             <CardDescription>
-              Agrega y administra los dispositivos eléctricos asociados a tu cuenta
+              {viewMode === "hourly"
+                ? `Últimas ${hoursWindow} horas` 
+                : `Últimos ${daysWindow} días`}
             </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <form onSubmit={handleAgregarDispositivo} className="grid md:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="device-nombre">Nombre del dispositivo</Label>
-                  <Input
-                    id="device-nombre"
-                    placeholder="Ej. Nevera"
-                    value={nuevoDispositivo.nombre}
-                    onChange={(e) => setNuevoDispositivo({ ...nuevoDispositivo, nombre: e.target.value })}
-                    required
-                  />
-                </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm text-sm"
+              value={selectedDevice ?? ""}
+              onChange={(e) => { setSelectedDevice(e.target.value || null); setLoadingData(true); }}
+            >
+              <option value="">Selecciona dispositivo</option>
+              {dispositivos.map((d) => (
+                <option key={d.id} value={d.id}>{d.nombre || d.id}</option>
+              ))}
+            </select>
 
-                <div className="space-y-2">
-                  <Label htmlFor="device-potencia">Potencia (W)</Label>
-                  <Input
-                    id="device-potencia"
-                    type="number"
-                    step="1"
-                    min="0"
-                    placeholder="Ej. 1500"
-                    value={nuevoDispositivo.potencia_w}
-                    onChange={(e) => setNuevoDispositivo({ ...nuevoDispositivo, potencia_w: e.target.value })}
-                  />
-                </div>
+            <select
+              className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm text-sm"
+              value={viewMode}
+              onChange={(e) => { setViewMode(e.target.value as any); setLoadingData(true); }}
+            >
+              <option value="hourly">Horario (por hora)</option>
+              <option value="daily">Diario</option>
+            </select>
 
-                <div>
-                  <Button type="submit" className="w-full md:w-auto">
-                    Agregar dispositivo
-                  </Button>
-                </div>
-              </form>
+            {viewMode === "hourly" ? (
+              <select className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm text-sm" value={hoursWindow} onChange={(e) => setHoursWindow(Number(e.target.value))}>
+                <option value={24}>24h</option>
+                <option value={48}>48h</option>
+                <option value={72}>72h</option>
+              </select>
+            ) : (
+              <select className="rounded border p-2 bg-card text-card-foreground border-border shadow-sm text-sm" value={daysWindow} onChange={(e) => setDaysWindow(Number(e.target.value))}>
+                <option value={7}>7d</option>
+                <option value={30}>30d</option>
+                <option value={90}>90d</option>
+              </select>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="fecha" />
+                <YAxis label={{ value: viewMode === "hourly" ? "Watts (W)" : "kWh", angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey={viewMode === "hourly" ? "watts" : "kwh"}
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--primary))" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="py-12 text-center text-muted-foreground">No hay datos de consumo aún para el dispositivo seleccionado.</div>
+          )}
+        </CardContent>
+      </Card>
 
-              {dispositivos.length > 0 ? (
-                <div className="grid gap-2">
-                  {dispositivos.map((d) => (
-                    <div key={d.id} className="flex items-center justify-between p-3 border rounded">
-                      <div>
-                        <div className="font-medium">{d.nombre}</div>
-                        <div className="text-xs text-muted-foreground">{d.potencia_w ? `${d.potencia_w} W` : "Potencia no definida"}</div>
-                      </div>
-                      <div className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</div>
+      {/* Devices management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Mis Dispositivos
+          </CardTitle>
+          <CardDescription>
+            Agrega y administra los dispositivos eléctricos asociados a tu cuenta
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <form onSubmit={handleAgregarDispositivo} className="grid md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="device-nombre">Nombre del dispositivo</Label>
+                <Input
+                  id="device-nombre"
+                  placeholder="Ej. Nevera"
+                  value={nuevoDispositivo.nombre}
+                  onChange={(e) => setNuevoDispositivo({ ...nuevoDispositivo, nombre: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="device-potencia">Potencia (W)</Label>
+                <Input
+                  id="device-potencia"
+                  type="number"
+                  step="1"
+                  min="0"
+                  placeholder="Ej. 1500"
+                  value={nuevoDispositivo.potencia_w}
+                  onChange={(e) => setNuevoDispositivo({ ...nuevoDispositivo, potencia_w: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Button type="submit" className="w-full md:w-auto">
+                  Agregar dispositivo
+                </Button>
+              </div>
+            </form>
+
+            {dispositivos.length > 0 ? (
+              <div className="grid gap-2">
+                {dispositivos.map((d) => (
+                  <div key={d.id} className="flex items-center justify-between p-3 border border-border rounded-lg bg-card/50 hover:bg-accent/50 transition-colors">
+                    <div>
+                      <div className="font-medium">{d.nombre}</div>
+                      <div className="text-xs text-muted-foreground">{d.potencia_w ? `${d.potencia_w} W` : "Potencia no definida"}</div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No hay dispositivos. Agrega uno arriba.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Manual consumption entry removed: consumption is recorded automatically per-device daily */}
-      </main>
-
-      <Footer />
+                    <div className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No hay dispositivos. Agrega uno arriba.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
