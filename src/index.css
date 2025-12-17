@@ -301,77 +301,11 @@ All colors MUST be HSL.
 
   /* Skip to content link for keyboard navigation */
   .skip-link {
-    display: none;
     @apply absolute -top-10 left-4 z-[100] bg-primary text-primary-foreground px-4 py-2 rounded-md transition-all duration-200;
   }
 
   .skip-link:focus {
-    display: block;
     @apply top-4;
-  }
-
-  /* Ocultar scrollbars internos en formularios y contenedores de auth sin impedir el scroll funcional */
-  /* - Firefox */
-  form, .auth-form, .auth-card, .card form {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  /* - WebKit (Chrome, Edge, Safari) */
-  form::-webkit-scrollbar,
-  .auth-form::-webkit-scrollbar,
-  .auth-card::-webkit-scrollbar,
-  .card form::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
-  }
-
-  /* Asegura que el contenedor del formulario de autenticación ocupe la pantalla
-     y haga scroll interno cuando el contenido sea mayor, evitando el scrollbar
-     del navegador (el scrollbar interno seguirá oculto por las reglas anteriores). */
-  .auth-card {
-    width: 100%;
-    max-width: 42rem;
-    max-height: calc(100vh - 4rem);
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Make the inner Card occupy available space and scroll internally */
-  .auth-card > .card {
-    flex: 1 1 auto;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Prevent body from scrolling when auth page is active */
-  body.auth-page {
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  /* Ensure password toggle stays visible when browser autofill UI is present */
-  .show-password-btn {
-    z-index: 60;
-    background: transparent;
-    border-radius: 6px;
-    padding: 0.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Give the input some right padding so the toggle does not overlap autofill popup */
-  .relative input {
-    padding-right: 3rem;
-  }
-
-  /* Try to keep appearance consistent when browser autofills inputs */
-  input:-webkit-autofill {
-    transition: background-color 5000s ease-in-out 0s;
   }
 
   /* Voice control indicator - shows when voice control is active */

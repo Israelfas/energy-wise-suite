@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Bell, ChevronRight, LogOut, User, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,7 +18,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-// SidebarTrigger removed per UX request
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import useNotify from "@/hooks/useNotify";
@@ -61,15 +61,9 @@ export const Header = () => {
     setShowSyncBanner(!!(user && local && local !== perfil));
   }, [user, perfil]);
 
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     trackClick("logout_button");
-    try {
-      await signOut();
-    } finally {
-      navigate("/auth");
-    }
+    signOut();
   };
 
   // Generate breadcrumb items
@@ -130,6 +124,11 @@ export const Header = () => {
       <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
         {/* Left Section: Sidebar trigger + Breadcrumb */}
         <div className="flex items-center gap-4 flex-1">
+          <SidebarTrigger 
+            className="h-10 w-10 shrink-0"
+            aria-label="Alternar menú lateral"
+          />
+          
           <Separator orientation="vertical" className="h-6 hidden md:block" />
           
           {/* Breadcrumb Navigation - WCAG 2.4.8 */}

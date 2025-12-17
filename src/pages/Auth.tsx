@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMetrics } from "@/hooks/useMetrics";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, ArrowLeft, Check, X, Eye, EyeOff } from "lucide-react";
+import { Leaf, ArrowLeft, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -66,13 +66,6 @@ export default function Auth() {
   const [loginStart, setLoginStart] = useState<number | null>(null);
   const [registerStart, setRegisterStart] = useState<number | null>(null);
 
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
-  const loginEmailRef = useRef<HTMLInputElement | null>(null);
-  const registerEmailRef = useRef<HTMLInputElement | null>(null);
-  const ariaStatusRef = useRef<HTMLDivElement | null>(null);
-
   // Lockout policy: after this many failed attempts, block for LOCK_DURATION_MS
   const LOCK_THRESHOLD = 3;
   const LOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -85,21 +78,6 @@ export default function Auth() {
     const id = setInterval(() => setLockTick((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [lockedUntil]);
-
-  useEffect(() => {
-    // focus login email on mount for faster keyboard entry
-    try { loginEmailRef.current?.focus(); } catch {}
-  }, []);
-
-  useEffect(() => {
-    // Prevent body scrolling on auth pages; enable internal scrolling in the card.
-    try {
-      document.body.classList.add("auth-page");
-    } catch {}
-    return () => {
-      try { document.body.classList.remove("auth-page"); } catch {}
-    };
-  }, []);
 
   // Redirect if already logged in
   if (user) {
@@ -140,7 +118,6 @@ export default function Auth() {
       const firstKey = Object.keys(errs)[0];
       const el = document.getElementById(`login-${firstKey}`) as HTMLElement | null;
       el?.focus();
-      try { if (ariaStatusRef.current) ariaStatusRef.current.textContent = errs[firstKey]; } catch {}
       return;
     }
 
@@ -168,7 +145,6 @@ export default function Auth() {
 
         trackMetric({ accion: 'login_failed', metadata: { email: loginData.email } });
         toast.error(error.message || 'Credenciales incorrectas');
-        try { if (ariaStatusRef.current) ariaStatusRef.current.textContent = error.message || 'Credenciales incorrectas'; } catch {}
         return;
       }
 
@@ -221,7 +197,6 @@ export default function Auth() {
       setRegisterErrors({ password: 'La contraseña no cumple los requisitos de seguridad' });
       const el = document.getElementById('register-password') as HTMLElement | null;
       el?.focus();
-      try { if (ariaStatusRef.current) ariaStatusRef.current.textContent = 'La contraseña no cumple los requisitos de seguridad'; } catch {}
       return;
     }
 
@@ -256,7 +231,6 @@ export default function Auth() {
       setResetError(result.error.errors[0].message);
       const el = document.getElementById(`reset-email`) as HTMLElement | null;
       el?.focus();
-      try { if (ariaStatusRef.current) ariaStatusRef.current.textContent = result.error.errors[0].message; } catch {}
       return;
     }
 
@@ -271,15 +245,13 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background overflow-hidden">
-      <div className="w-full max-w-md space-y-6 auth-card">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+      <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <Link
-            to="/"
-            aria-label="Volver al inicio"
-            className="inline-flex items-center gap-3 font-bold text-2xl hover:opacity-80 transition-opacity"
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 font-bold text-2xl hover:opacity-80 transition-opacity"
           >
-            <ArrowLeft className="h-5 w-5 text-primary-foreground" />
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
               <Leaf className="h-6 w-6 text-primary-foreground" />
             </div>
@@ -297,23 +269,19 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div ref={ariaStatusRef} role="status" aria-live="polite" className="sr-only" />
-            <Tabs defaultValue="login" className="w-full" aria-label="Formularios de autenticación">
+            <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4" role="form" aria-labelledby="auth-login-title">
-                  <h2 id="auth-login-title" className="sr-only">Formulario de inicio de sesión</h2>
+                <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
                     <Input
                       id="login-email"
                       type="email"
-                      autoComplete="email"
-                      ref={loginEmailRef}
                       placeholder="tu@email.com"
                       value={loginData.email}
                       onChange={(e) =>
@@ -332,30 +300,18 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Contraseña</Label>
-                    <div className="relative">
-                      <Input
-                        id="login-password"
-                        type={showLoginPassword ? "text" : "password"}
-                        autoComplete="current-password"
-                        value={loginData.password}
-                        onChange={(e) =>
-                          setLoginData({ ...loginData, password: e.target.value })
-                        }
-                        onFocus={() => { if (!loginStart) { setLoginStart(Date.now()); trackMetric({ accion: 'login_started', metadata: { timestamp: new Date().toISOString() } }); } }}
-                        required
-                        aria-invalid={!!loginErrors.password}
-                        aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
-                      />
-                      <button
-                        type="button"
-                        aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground show-password-btn"
-                        onClick={() => setShowLoginPassword((s) => !s)}
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      value={loginData.password}
+                      onChange={(e) =>
+                        setLoginData({ ...loginData, password: e.target.value })
+                      }
+                      onFocus={() => { if (!loginStart) { setLoginStart(Date.now()); trackMetric({ accion: 'login_started', metadata: { timestamp: new Date().toISOString() } }); } }}
+                      required
+                      aria-invalid={!!loginErrors.password}
+                      aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
+                    />
                     {loginErrors.password ? (
                       <p id="login-password-error" className="text-xs text-destructive mt-1">{loginErrors.password}</p>
                     ) : (
@@ -386,8 +342,7 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4" role="form" aria-labelledby="auth-register-title">
-                  <h2 id="auth-register-title" className="sr-only">Formulario de registro</h2>
+                <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="register-nombre">Nombre Completo</Label>
                     <Input
@@ -425,8 +380,6 @@ export default function Auth() {
                     <Input
                       id="register-email"
                       type="email"
-                      autoComplete="email"
-                      ref={registerEmailRef}
                       placeholder="tu@email.com"
                       value={registerData.email}
                       onChange={(e) =>
@@ -445,33 +398,21 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Contraseña</Label>
-                    <div className="relative">
-                      <Input
-                        id="register-password"
-                        type={showRegisterPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        value={registerData.password}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            password: e.target.value,
-                          })
-                        }
-                        onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
-                        required
-                        aria-invalid={!!registerErrors.password}
-                        aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
-                      />
-                      <button
-                        type="button"
-                        aria-label={showRegisterPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground show-password-btn"
-                        onClick={() => setShowRegisterPassword((s) => !s)}
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
+                    <Input
+                      id="register-password"
+                      type="password"
+                      value={registerData.password}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          password: e.target.value,
+                        })
+                      }
+                      onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
+                      required
+                      aria-invalid={!!registerErrors.password}
+                      aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
+                    />
                     <div className="mt-2">
                       <ul className="text-sm space-y-1">
                         <li className={`flex items-center gap-2 ${registerData.password.length >= 8 ? 'text-green-600' : 'text-muted-foreground'}`}>
@@ -497,33 +438,21 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-confirm">Confirmar Contraseña</Label>
-                    <div className="relative">
-                      <Input
-                        id="register-confirmPassword"
-                        type={showRegisterConfirm ? "text" : "password"}
-                        autoComplete="new-password"
-                        value={registerData.confirmPassword}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            confirmPassword: e.target.value,
-                          })
-                        }
-                        onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
-                        required
-                        aria-invalid={!!registerErrors.confirmPassword}
-                        aria-describedby={registerErrors.confirmPassword ? 'register-confirmPassword-error' : undefined}
-                      />
-                      <button
-                        type="button"
-                        aria-label={showRegisterConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground show-password-btn"
-                        onClick={() => setShowRegisterConfirm((s) => !s)}
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        {showRegisterConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
+                    <Input
+                      id="register-confirmPassword"
+                      type="password"
+                      value={registerData.confirmPassword}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
+                      required
+                      aria-invalid={!!registerErrors.confirmPassword}
+                      aria-describedby={registerErrors.confirmPassword ? 'register-confirmPassword-error' : undefined}
+                    />
                     {registerErrors.confirmPassword ? (
                       <p id="register-confirmPassword-error" className="text-xs text-destructive mt-1">{registerErrors.confirmPassword}</p>
                     ) : (
@@ -577,7 +506,17 @@ export default function Auth() {
           </CardContent>
         </Card>
 
-        
+        <Button
+          variant="ghost"
+          asChild
+          className="w-full"
+          onClick={() => trackClick("back_home")}
+        >
+          <Link to="/" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Volver al inicio
+          </Link>
+        </Button>
       </div>
     </div>
   );

@@ -151,7 +151,7 @@ export default function Profile() {
   const handleSignOut = async () => {
     trackClick("logout");
     await signOut();
-    navigate("/auth");
+    navigate("/");
   };
 
   if (loading || !user) return null;
