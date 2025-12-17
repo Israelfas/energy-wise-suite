@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { AccessibilityFeatures } from "@/components/AccessibilityFeatures";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -37,7 +37,6 @@ const App = () => (
               <SidebarInset className="flex flex-col flex-1">
                 <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                   <div className="flex h-14 items-center gap-4 px-4">
-                    <SidebarTrigger className="-ml-1" />
                     <div className="flex-1" />
                     <Header />
                   </div>
