@@ -18,7 +18,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+// SidebarTrigger removed per UX request
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import useNotify from "@/hooks/useNotify";
@@ -130,11 +130,6 @@ export const Header = () => {
       <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
         {/* Left Section: Sidebar trigger + Breadcrumb */}
         <div className="flex items-center gap-4 flex-1">
-          <SidebarTrigger 
-            className="h-10 w-10 shrink-0"
-            aria-label="Alternar menú lateral"
-          />
-          
           <Separator orientation="vertical" className="h-6 hidden md:block" />
           
           {/* Breadcrumb Navigation - WCAG 2.4.8 */}
